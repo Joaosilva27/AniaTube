@@ -347,14 +347,39 @@ ytmusic-logo a::before {
   line-height: 1;
 }
 ytmusic-logo::after {
-  content: "\\2665";
+  content: "";
   display: inline-block;
-  margin-left: 6px;
-  color: #ff6fa5;
-  font-size: 15px;
-  line-height: 1;
+  width: 26px;
+  height: 18px;
+  margin-left: 8px;
   vertical-align: middle;
   transform: translateY(-1px);
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 20'%3E%3Crect width='28' height='20' rx='5' fill='%23ff5f97'/%3E%3Cpath d='M11 5.5L18 10L11 14.5Z' fill='%23ffffff'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+
+/* "New playlist" in the guide is a new-spec button whose label is hardcoded
+   near-white on a translucent white pill, so it disappears on the blush
+   sidebar. Give it the same blush pill and rose label as the mood chips. */
+ytmusic-guide-section-renderer #buttons yt-button-renderer button {
+  background: #ffe4ee !important;
+  border: 1px solid #f4bfd3 !important;
+  border-radius: 999px !important;
+  color: #b23a6a !important;
+  box-shadow: 0 1px 3px rgba(201, 75, 123, 0.06) !important;
+}
+ytmusic-guide-section-renderer #buttons yt-button-renderer button *,
+ytmusic-guide-section-renderer #buttons yt-button-renderer .ytAttributedStringHost,
+ytmusic-guide-section-renderer #buttons yt-button-renderer yt-icon,
+ytmusic-guide-section-renderer #buttons yt-button-renderer svg,
+ytmusic-guide-section-renderer #buttons yt-button-renderer svg path {
+  color: #b23a6a !important;
+  fill: #b23a6a !important;
+}
+ytmusic-guide-section-renderer #buttons yt-button-renderer button:hover {
+  background: #ffd6e6 !important;
 }
 
 /* Player page tabs (Up next / Lyrics / Comments / Related) are hardcoded
