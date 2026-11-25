@@ -325,6 +325,8 @@ ytmusic-play-button-renderer #play-button {
 
 /* Replace the white YouTube Music wordmark with a rose AniaTube wordmark. */
 ytmusic-logo {
+  display: inline-flex !important;
+  align-items: center !important;
   width: auto !important;
   height: 24px !important;
 }
@@ -346,14 +348,14 @@ ytmusic-logo a::before {
   color: #c94b7b;
   line-height: 1;
 }
-ytmusic-logo::after {
+/* The badge lives inside the anchor so the flex row centres it with the
+   wordmark; as a sibling of the anchor it sat a couple of pixels low. */
+ytmusic-logo a::after {
   content: "";
-  display: inline-block;
+  flex: 0 0 auto;
   width: 26px;
   height: 18px;
   margin-left: 8px;
-  vertical-align: middle;
-  transform: translateY(-1px);
   background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 20'%3E%3Crect width='28' height='20' rx='5' fill='%23ff5f97'/%3E%3Cpath d='M11 5.5L18 10L11 14.5Z' fill='%23ffffff'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: center;
