@@ -19,6 +19,7 @@ static NSString * const YTMSafariUserAgent =
 @property (nonatomic, strong) AdBlocker *adBlocker;
 @property (nonatomic, strong, nullable) PlaybackState *state;
 @property (nonatomic, assign) BOOL loading;
+@property (nonatomic, assign) BOOL signingIn;
 @property (nonatomic, assign) NSInteger consentAutomationAttempts;
 
 - (void)handleScriptMessage:(WKScriptMessage *)message;
@@ -347,6 +348,28 @@ static NSString * const YTMSafariUserAgent =
 
 #pragma mark - URL policy
 
+/// Matches a domain *family* such as google or youtube, including country
+/// domains: google.com, accounts.google.pt, www.youtube.co.uk, ...
+/// The label must be a full DNS label ("google", never "notgoogle") and every
+/// label after it must look like a TLD so lookalike hosts cannot slip through.
+- (BOOL)host:(NSString *)host belongsToDomainFamily:(NSString *)family {
+    if (!host.length || !family.length) { return NO; }
+    NSArray<NSString *> *labels = [host.lowercaseString componentsSeparatedByString:@"."];
+    NSUInteger index = [labels indexOfObject:family];
+    if (index == NSNotFound) { return NO; }
+
+    NSUInteger trailing = labels.count - index - 1;
+    if (trailing < 1 || trailing > 3) { return NO; }
+
+    NSCharacterSet *letters = [NSCharacterSet lowercaseLetterCharacterSet];
+    for (NSUInteger i = index + 1; i < labels.count; i++) {
+        NSString *label = labels[i];
+        if (label.length < 2 || label.length > 4) { return NO; }
+        if ([label rangeOfCharacterFromSet:[letters invertedSet]].location != NSNotFound) { return NO; }
+    }
+    return YES;
+}
+
 - (BOOL)isAllowedHost:(NSString *)host {
     if (!host.length) { return NO; }
     NSString *value = host.lowercaseString;
@@ -354,14 +377,52 @@ static NSString * const YTMSafariUserAgent =
         @"youtube.com",
         @"youtu.be",
         @"google.com",
-        @"googleusercontent.com"
+        @"googleusercontent.com",
+        @"googleapis.com",
+        @"gstatic.com",
+        @"ggpht.com",
+        @"ytimg.com",
+        @"googlevideo.com",
+        @"youtube-nocookie.com"
     ];
     for (NSString *domain in domains) {
         if ([value isEqualToString:domain] || [value hasSuffix:[@"." stringByAppendingString:domain]]) {
             return YES;
         }
     }
-    return NO;
+
+    // Google serves the tail end of the sign-in handshake (SetSID, CheckCookie)
+    // from the user's country domain — accounts.google.pt, accounts.google.co.uk,
+    // and so on. Those must stay inside the app or the session cookie is written
+    // to the browser instead of the app's web view.
+    return [self host:value belongsToDomainFamily:@"google"] ||
+           [self host:value belongsToDomainFamily:@"youtube"];
+}
+
+- (BOOL)isAuthenticationURL:(NSURL *)url {
+    if (!url) { return NO; }
+    NSString *scheme = url.scheme.lowercaseString;
+    if (![scheme isEqualToString:@"http"] && ![scheme isEqualToString:@"https"]) { return NO; }
+
+    NSString *host = url.host.lowercaseString;
+    NSString *path = url.path.lowercaseString ?: @"";
+    if (!host.length) { return NO; }
+
+    BOOL isGoogle = [self host:host belongsToDomainFamily:@"google"];
+    BOOL isYouTube = [self host:host belongsToDomainFamily:@"youtube"];
+    if (!isGoogle && !isYouTube) { return NO; }
+
+    if (isGoogle &&
+        ([host hasPrefix:@"accounts."] ||
+         [host hasPrefix:@"myaccount."] ||
+         [host hasPrefix:@"consent."])) {
+        return YES;
+    }
+
+    return [path containsString:@"setsid"] ||
+           [path containsString:@"checkcookie"] ||
+           [path containsString:@"servicelogin"] ||
+           [path containsString:@"signin"];
 }
 
 - (BOOL)isInternalURL:(NSURL *)url {
@@ -410,7 +471,16 @@ static NSString * const YTMSafariUserAgent =
               (long)navigationAction.navigationType);
     }
 
+    if ([self isAuthenticationURL:url]) {
+        self.signingIn = YES;
+        decisionHandler(WKNavigationActionPolicyAllow);
+        return;
+    }
+
     if ([self isInternalURL:url]) {
+        if ([url.host.lowercaseString hasSuffix:@"music.youtube.com"]) {
+            self.signingIn = NO;
+        }
         decisionHandler(WKNavigationActionPolicyAllow);
         return;
     }
@@ -420,6 +490,17 @@ static NSString * const YTMSafariUserAgent =
     if (![scheme isEqualToString:@"http"] && ![scheme isEqualToString:@"https"]) {
         [self openExternally:url];
         decisionHandler(WKNavigationActionPolicyCancel);
+        return;
+    }
+
+    // Once a sign-in has started, keep every hop inside the app until we land
+    // back on YouTube Music. Google's handshake touches an unpredictable set of
+    // hosts, and handing any of them to the browser loses the session.
+    if (self.signingIn) {
+        if ([NSProcessInfo.processInfo.environment[@"YTM_VERBOSE"] boolValue]) {
+            NSLog(@"[YTM] Keeping sign-in hop in-app: %@", url.absoluteString);
+        }
+        decisionHandler(WKNavigationActionPolicyAllow);
         return;
     }
 
@@ -506,7 +587,27 @@ static NSString * const YTMSafariUserAgent =
 }
 
 - (void)handleNavigationError:(NSError *)error {
-    if ([error.domain isEqualToString:NSURLErrorDomain] && error.code == NSURLErrorCancelled) {
+    BOOL wasCancelled =
+        ([error.domain isEqualToString:NSURLErrorDomain] && error.code == NSURLErrorCancelled) ||
+        ([error.domain isEqualToString:@"WebKitErrorDomain"] && error.code == 102 /* frame load interrupted by policy change */);
+    if (wasCancelled) {
+        self.loading = NO;
+        NSURL *current = self.webView.URL;
+        // A cancelled hand-off to the browser used to leave the window empty.
+        // If there is no committed page to fall back to, show the start page
+        // instead of a blank view.
+        if (!current || [current.absoluteString isEqualToString:@"about:blank"]) {
+            self.signingIn = NO;
+            __weak typeof(self) weakSelf = self;
+            dispatch_async(dispatch_get_main_queue(), ^{
+                __strong typeof(weakSelf) self = weakSelf;
+                if (!self) { return; }
+                NSURL *url = self.webView.URL;
+                if (!url || [url.absoluteString isEqualToString:@"about:blank"]) {
+                    [self loadStartPage];
+                }
+            });
+        }
         return;
     }
     self.loading = NO;
@@ -536,6 +637,14 @@ static NSString * const YTMSafariUserAgent =
         NSLog(@"[YTM] New window requested: %@", url.absoluteString);
     }
 
+    // Google's sign-in handshake can arrive as a popup. Load it in the main
+    // web view so the session cookies land in the app instead of the browser.
+    if ([self isAuthenticationURL:url]) {
+        self.signingIn = YES;
+        [webView loadRequest:navigationAction.request];
+        return nil;
+    }
+
     NSString *scheme = url.scheme.lowercaseString;
     if ([scheme isEqualToString:@"about"] || [scheme isEqualToString:@"blob"] ||
         [scheme isEqualToString:@"data"] || [scheme isEqualToString:@"javascript"]) {
@@ -545,7 +654,7 @@ static NSString * const YTMSafariUserAgent =
         return nil;
     }
 
-    if ([self isInternalURL:url]) {
+    if ([self isInternalURL:url] || self.signingIn) {
         [webView loadRequest:navigationAction.request];
     } else {
         [self openExternally:url];

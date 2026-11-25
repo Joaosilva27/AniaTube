@@ -155,7 +155,10 @@ checksum, with the app, an Applications shortcut, and a Finder window layout.
 - `Sources/WebController.m` owns the `WKWebView`, navigation policy, the
   JavaScript bridge, and in-app Google authentication. Internal links and
   sign-in redirects stay in the app; blank scripted popups are ignored so the
-  page can never be replaced by an empty black document.
+  page can never be replaced by an empty black document. Google's sign-in
+  handshake is also kept in-app across its country domains
+  (`accounts.google.pt`, `accounts.google.co.uk`, …), which is where the
+  session cookie (`SetSID`) is actually written.
 - `Resources/PlayerBridge.js` reads player state from the page and exposes
   play/pause, seek, previous/next, and like commands.
 - `Sources/NowPlayingService.m` publishes metadata to MediaPlayer and handles
