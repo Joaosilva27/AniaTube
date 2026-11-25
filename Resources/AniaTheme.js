@@ -362,6 +362,23 @@ ytmusic-logo a::after {
   background-size: contain;
 }
 
+/* The hover play button on guide entries ships a white circle with an
+   inline white icon colour, so the triangle vanished into the circle.
+   Use the same rose fill and white glyph as the other play buttons. */
+ytmusic-guide-entry-renderer ytmusic-play-button-renderer#play-button {
+  --ytmusic-play-button-icon-color: #ffffff !important;
+  --ytmusic-play-button-background-color: #ff6fa5 !important;
+  background: #ff6fa5 !important;
+  color: #ffffff !important;
+}
+ytmusic-guide-entry-renderer ytmusic-play-button-renderer#play-button *,
+ytmusic-guide-entry-renderer ytmusic-play-button-renderer#play-button yt-icon,
+ytmusic-guide-entry-renderer ytmusic-play-button-renderer#play-button svg,
+ytmusic-guide-entry-renderer ytmusic-play-button-renderer#play-button svg path {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+}
+
 /* "New playlist" in the guide is a new-spec button whose label is hardcoded
    near-white on a translucent white pill, so it disappears on the blush
    sidebar. Give it the same blush pill and rose label as the mood chips. */
