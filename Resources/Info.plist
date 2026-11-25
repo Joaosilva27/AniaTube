@@ -5,17 +5,17 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
     <key>CFBundleExecutable</key>
-    <string>YouTube Music</string>
+    <string>AniaTube</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>CFBundleIdentifier</key>
-    <string>com.joaosilva.ytmdesktop</string>
+    <string>com.joaosilva.aniatube</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>YouTube Music</string>
+    <string>AniaTube</string>
     <key>CFBundleDisplayName</key>
-    <string>YouTube Music</string>
+    <string>AniaTube</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
@@ -31,7 +31,7 @@
     <key>NSPrincipalClass</key>
     <string>NSApplication</string>
     <key>NSHumanReadableCopyright</key>
-    <string>Unofficial YouTube Music client. Not affiliated with Google LLC.</string>
+    <string>AniaTube — a pink little YouTube Music player. Unofficial client, not affiliated with Google LLC.</string>
     <key>NSMicrophoneUsageDescription</key>
     <string>YouTube Music uses the microphone only if you use YouTube Music's "Search for a song" feature.</string>
     <key>NSSupportsAutomaticGraphicsSwitching</key>

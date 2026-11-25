@@ -70,7 +70,7 @@
 }
 
 - (NSString *)displayTitle {
-    return self.title.length > 0 ? self.title : @"YouTube Music";
+    return self.title.length > 0 ? self.title : @"AniaTube";
 }
 
 - (NSString *)subtitle {

@@ -80,10 +80,10 @@ jobs:
         if: env.PUBLISH == 'true'
         run: |
           set -euo pipefail
-          APP="dist/YouTube Music.app"
-          lipo -info "$APP/Contents/MacOS/YouTube Music"
-          lipo -archs "$APP/Contents/MacOS/YouTube Music" | grep -q arm64
-          lipo -archs "$APP/Contents/MacOS/YouTube Music" | grep -q x86_64
+          APP="dist/AniaTube.app"
+          lipo -info "$APP/Contents/MacOS/AniaTube"
+          lipo -archs "$APP/Contents/MacOS/AniaTube" | grep -q arm64
+          lipo -archs "$APP/Contents/MacOS/AniaTube" | grep -q x86_64
           plutil -lint "$APP/Contents/Info.plist"
           /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APP/Contents/Info.plist"
           codesign --verify --deep --strict "$APP"
@@ -154,7 +154,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: env.PUBLISH == 'true'
         with:
-          name: YouTube-Music-DMG
+          name: AniaTube-DMG
           path: |
             dist/*.dmg
             dist/*.sha256
@@ -163,7 +163,7 @@ jobs:
         if: env.PUBLISH == 'true'
         with:
           tag_name: ${{ env.TAG }}
-          name: YouTube Music ${{ env.VERSION }}
+          name: AniaTube ${{ env.VERSION }}
           body_path: build/release-notes.md
           fail_on_unmatched_files: true
           files: |

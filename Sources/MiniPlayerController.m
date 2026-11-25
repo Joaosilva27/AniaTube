@@ -1,5 +1,6 @@
 #import "MiniPlayerController.h"
 
+#import "AniaTheme.h"
 #import "ArtworkLoader.h"
 #import "PlaybackState.h"
 #import "Preferences.h"
@@ -87,19 +88,28 @@ typedef struct {
 
     NSImage *image = self.image;
     if (!image || image.size.width <= 0 || image.size.height <= 0) {
-        NSGradient *gradient = [[NSGradient alloc] initWithColors:@[
-            [NSColor colorWithSRGBRed:0.16 green:0.16 blue:0.17 alpha:1.0],
-            [NSColor colorWithSRGBRed:0.07 green:0.07 blue:0.08 alpha:1.0]
-        ]];
+        NSGradient *gradient = [[NSGradient alloc] initWithColorsAndLocations:
+            [AniaTheme petal], 0.0,
+            [AniaTheme rose], 0.58,
+            [AniaTheme pink], 1.0,
+            nil];
         [gradient drawInRect:bounds angle:-90];
+
+        CGFloat heartSide = MIN(NSWidth(bounds), NSHeight(bounds)) * 0.38;
+        NSRect heartRect = NSMakeRect(NSMidX(bounds) - heartSide / 2,
+                                      NSMidY(bounds) - heartSide / 2,
+                                      heartSide, heartSide);
+        [AniaTheme drawHeartInRect:heartRect color:[[NSColor whiteColor] colorWithAlphaComponent:0.82]];
 
         NSImage *note = [NSImage imageWithSystemSymbolName:@"music.note" accessibilityDescription:nil];
         NSImageSymbolConfiguration *configuration =
-            [NSImageSymbolConfiguration configurationWithPointSize:26 weight:NSFontWeightRegular];
+            [NSImageSymbolConfiguration configurationWithPointSize:heartSide * 0.42 weight:NSFontWeightSemibold];
         note = [note imageWithSymbolConfiguration:configuration];
         note.template = YES;
-        NSRect noteRect = NSMakeRect(NSMidX(bounds) - 14, NSMidY(bounds) - 14, 28, 28);
-        [[NSColor colorWithWhite:1.0 alpha:0.28] set];
+        NSRect noteRect = NSMakeRect(NSMidX(bounds) - heartSide * 0.13,
+                                     NSMidY(bounds) - heartSide * 0.11,
+                                     heartSide * 0.26, heartSide * 0.26);
+        [[AniaTheme pinkDeep] set];
         [note drawInRect:noteRect fromRect:NSZeroRect operation:NSCompositingOperationSourceOver fraction:1.0 respectFlipped:YES hints:nil];
         return;
     }
@@ -133,14 +143,14 @@ typedef struct {
     CGFloat radius = NSHeight(bounds) / 2;
 
     NSBezierPath *track = [NSBezierPath bezierPathWithRoundedRect:bounds xRadius:radius yRadius:radius];
-    [[NSColor colorWithWhite:0.5 alpha:0.25] setFill];
+    [[[AniaTheme pinkDeep] colorWithAlphaComponent:0.18] setFill];
     [track fill];
 
     if (self.progress <= 0) { return; }
     CGFloat width = MAX(NSHeight(bounds), NSWidth(bounds) * self.progress);
     NSRect fillRect = NSMakeRect(0, 0, MIN(width, NSWidth(bounds)), NSHeight(bounds));
     NSBezierPath *fill = [NSBezierPath bezierPathWithRoundedRect:fillRect xRadius:radius yRadius:radius];
-    [[NSColor labelColor] setFill];
+    [[AniaTheme pink] setFill];
     [fill fill];
 }
 
@@ -148,13 +158,49 @@ typedef struct {
 
 #pragma mark - Background / panel
 
-@interface YTMMiniBackgroundView : NSVisualEffectView
+@interface YTMMiniBackgroundView : NSView
+@property (nonatomic, assign) CGFloat cornerRadius;
 @end
 
 @implementation YTMMiniBackgroundView
+
+- (instancetype)initWithFrame:(NSRect)frameRect {
+    self = [super initWithFrame:frameRect];
+    if (self) {
+        _cornerRadius = 16;
+    }
+    return self;
+}
+
 - (BOOL)mouseDownCanMoveWindow {
     return YES;
 }
+
+- (void)setCornerRadius:(CGFloat)cornerRadius {
+    _cornerRadius = cornerRadius;
+    self.needsDisplay = YES;
+}
+
+- (void)drawRect:(NSRect)dirtyRect {
+    NSRect bounds = NSInsetRect(self.bounds, 0.5, 0.5);
+    NSBezierPath *body = [NSBezierPath bezierPathWithRoundedRect:bounds
+                                                         xRadius:self.cornerRadius
+                                                         yRadius:self.cornerRadius];
+    [body addClip];
+    [[AniaTheme miniPlayerGradient] drawInRect:bounds angle:-90];
+
+    // A soft glow in the top-left and a wine-pink rim keep the panel defined
+    // against both light and dark desktops.
+    NSGradient *glow = [[NSGradient alloc] initWithStartingColor:[[NSColor whiteColor] colorWithAlphaComponent:0.55]
+                                                   endingColor:[[NSColor whiteColor] colorWithAlphaComponent:0.0]];
+    [glow drawInRect:NSMakeRect(NSMinX(bounds), NSMidY(bounds), NSWidth(bounds), NSHeight(bounds) / 2)
+               angle:-90];
+
+    [[[AniaTheme pinkDeep] colorWithAlphaComponent:0.22] setStroke];
+    body.lineWidth = 1;
+    [body stroke];
+}
+
 @end
 
 @interface YTMMiniPanel : NSPanel
@@ -229,7 +275,7 @@ typedef struct {
     panel.excludedFromWindowsMenu = YES;
     panel.movableByWindowBackground = YES;
     panel.animationBehavior = NSWindowAnimationBehaviorUtilityWindow;
-    panel.appearance = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
+    panel.appearance = [NSAppearance appearanceNamed:NSAppearanceNameAqua];
     panel.contentMinSize = NSMakeSize(metrics.width, metrics.height);
     panel.contentMaxSize = NSMakeSize(metrics.width, metrics.height);
     if ([panel respondsToSelector:@selector(setBecomesKeyOnlyIfNeeded:)]) {
@@ -238,12 +284,7 @@ typedef struct {
     self.panel = panel;
 
     YTMMiniBackgroundView *background = [[YTMMiniBackgroundView alloc] initWithFrame:panel.contentLayoutRect];
-    background.material = NSVisualEffectMaterialPopover;
-    background.blendingMode = NSVisualEffectBlendingModeBehindWindow;
-    background.state = NSVisualEffectStateActive;
-    background.wantsLayer = YES;
-    background.layer.cornerRadius = metrics.cornerRadius;
-    background.layer.masksToBounds = YES;
+    background.cornerRadius = metrics.cornerRadius;
     panel.contentView = background;
     self.backgroundView = background;
 
@@ -417,7 +458,7 @@ typedef struct {
     _likeButton.translatesAutoresizingMaskIntoConstraints = NO;
     [view addSubview:_likeButton];
 
-    NSButton *openButton = [self buttonWithSymbol:@"arrow.up.forward.square" size:13 action:@selector(openPressed:) tooltip:@"Open YouTube Music"];
+    NSButton *openButton = [self buttonWithSymbol:@"arrow.up.forward.square" size:13 action:@selector(openPressed:) tooltip:@"Open AniaTube"];
     openButton.translatesAutoresizingMaskIntoConstraints = NO;
     [view addSubview:openButton];
     _openButton = openButton;
@@ -443,8 +484,21 @@ typedef struct {
         [NSLayoutConstraint deactivateConstraints:self.layoutConstraints];
     }
 
-    self.backgroundView.layer.cornerRadius = metrics.cornerRadius;
+    self.backgroundView.cornerRadius = metrics.cornerRadius;
     self.coverView.cornerRadius = metrics.coverRadius;
+    self.titleLabel.textColor = [AniaTheme plum];
+    self.artistLabel.textColor = [AniaTheme plumSoft];
+    self.timeLabel.textColor = [[AniaTheme plumSoft] colorWithAlphaComponent:0.82];
+    self.playButton.wantsLayer = YES;
+    self.playButton.layer.backgroundColor = [AniaTheme pink].CGColor;
+    self.playButton.layer.cornerRadius = metrics.playWidth / 2;
+    self.playButton.contentTintColor = [NSColor whiteColor];
+    self.likeButton.contentTintColor = [AniaTheme pinkDeep];
+    self.previousButton.contentTintColor = [AniaTheme pinkDeep];
+    self.nextButton.contentTintColor = [AniaTheme pinkDeep];
+    self.sizeButton.contentTintColor = [AniaTheme pinkDeep];
+    self.openButton.contentTintColor = [AniaTheme pinkDeep];
+    self.closeButton.contentTintColor = [AniaTheme pinkDeep];
     self.titleLabel.font = [NSFont systemFontOfSize:metrics.titleSize weight:NSFontWeightSemibold];
     self.artistLabel.font = [NSFont systemFontOfSize:metrics.artistSize weight:NSFontWeightRegular];
     if (@available(macOS 10.15, *)) {
@@ -458,7 +512,7 @@ typedef struct {
     self.playButton.image = [self imageNamed:(self.state.isPlaying ? @"pause.fill" : @"play.fill")
                                       size:metrics.playSymbol];
     self.nextButton.image = [self imageNamed:@"forward.fill" size:metrics.nextSymbol];
-    self.likeButton.image = [self imageNamed:(self.state.isLiked ? @"hand.thumbsup.fill" : @"hand.thumbsup")
+    self.likeButton.image = [self imageNamed:(self.state.isLiked ? @"heart.fill" : @"heart")
                                       size:metrics.likeSymbol];
     self.openButton.image = [self imageNamed:@"arrow.up.forward.square" size:metrics.openSymbol];
     self.closeButton.image = [self imageNamed:@"xmark" size:metrics.closeSymbol];
@@ -609,7 +663,7 @@ typedef struct {
     button.bordered = NO;
     button.imagePosition = NSImageOnly;
     button.imageScaling = NSImageScaleProportionallyDown;
-    button.contentTintColor = NSColor.labelColor;
+    button.contentTintColor = [AniaTheme pinkDeep];
     button.focusRingType = NSFocusRingTypeNone;
     button.toolTip = tooltip;
     return button;
@@ -699,20 +753,19 @@ typedef struct {
     self.state = state;
     BOOL hasTrack = state.hasTrack;
 
-    self.panel.appearance = [NSAppearance appearanceNamed:
-        (state == nil || state.isDark ? NSAppearanceNameDarkAqua : NSAppearanceNameAqua)];
+    self.panel.appearance = [NSAppearance appearanceNamed:NSAppearanceNameAqua];
 
     self.titleLabel.stringValue = hasTrack ? state.title : @"Not Playing";
     self.artistLabel.stringValue = hasTrack
         ? (state.subtitle.length > 0 ? state.subtitle : @"YouTube Music")
-        : @"YouTube Music";
+        : @"AniaTube";
     self.playButton.image = [self imageNamed:state.isPlaying ? @"pause.fill" : @"play.fill"
                                       size:self.metrics.playSymbol];
     self.playButton.enabled = hasTrack;
     self.previousButton.enabled = hasTrack && state.canPrevious;
     self.nextButton.enabled = hasTrack && state.canNext;
     self.likeButton.enabled = hasTrack && state.canLike;
-    self.likeButton.image = [self imageNamed:state.isLiked ? @"hand.thumbsup.fill" : @"hand.thumbsup"
+    self.likeButton.image = [self imageNamed:state.isLiked ? @"heart.fill" : @"heart"
                                       size:self.metrics.likeSymbol];
     self.progressView.progress = state.progress;
 

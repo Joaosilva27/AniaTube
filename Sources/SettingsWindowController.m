@@ -1,5 +1,6 @@
 #import "SettingsWindowController.h"
 
+#import "AniaTheme.h"
 #import "LoginItemManager.h"
 #import "Preferences.h"
 
@@ -26,12 +27,16 @@
     self = [super initWithWindow:window];
     if (!self) { return nil; }
 
-    window.title = @"Settings";
+    window.title = @"AniaTube Settings";
     window.restorable = NO;
     window.releasedWhenClosed = NO;
     window.collectionBehavior = NSWindowCollectionBehaviorFullScreenAuxiliary;
+    window.backgroundColor = [AniaTheme cream];
+    window.appearance = [NSAppearance appearanceNamed:NSAppearanceNameAqua];
 
     NSView *content = [[NSView alloc] initWithFrame:window.contentLayoutRect];
+    content.wantsLayer = YES;
+    content.layer.backgroundColor = [AniaTheme cream].CGColor;
     window.contentView = content;
 
     NSStackView *stack = [NSStackView stackViewWithViews:@[]];
@@ -118,7 +123,7 @@
     [stack addArrangedSubview:[self sectionLabel:@"Startup"]];
     [stack setCustomSpacing:10 afterView:stack.arrangedSubviews.lastObject];
 
-    self.loginCheckbox = [self checkboxWithTitle:@"Launch YouTube Music at login"
+    self.loginCheckbox = [self checkboxWithTitle:@"Launch AniaTube at login"
                                           action:@selector(loginItemChanged:)];
     [stack addArrangedSubview:self.loginCheckbox];
     [stack setCustomSpacing:16 afterView:self.loginCheckbox];
@@ -166,17 +171,15 @@
     [separator.widthAnchor constraintEqualToAnchor:stack.widthAnchor].active = YES;
     [stack setCustomSpacing:12 afterView:separator];
 
-    NSButton *restore = [NSButton buttonWithTitle:@"Restore Defaults"
-                                           target:self
-                                           action:@selector(restoreDefaults:)];
-    restore.bezelStyle = NSBezelStyleRounded;
-    restore.controlSize = NSControlSizeSmall;
+    AniaPillButton *restore = [[AniaPillButton alloc] initWithPillTitle:@"Restore Defaults"
+                                                                 target:self
+                                                                 action:@selector(restoreDefaults:)];
 
     NSString *version = [NSBundle.mainBundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"] ?: @"1.0";
     NSTextField *versionLabel = [NSTextField labelWithString:
-        [NSString stringWithFormat:@"YouTube Music %@ · Unofficial client", version]];
+        [NSString stringWithFormat:@"AniaTube %@ · made with ♥", version]];
     versionLabel.font = [NSFont systemFontOfSize:11];
-    versionLabel.textColor = NSColor.tertiaryLabelColor;
+    versionLabel.textColor = [AniaTheme plumSoft];
     versionLabel.translatesAutoresizingMaskIntoConstraints = NO;
     versionLabel.alignment = NSTextAlignmentRight;
 
@@ -208,7 +211,7 @@
 - (NSTextField *)sectionLabel:(NSString *)string {
     NSTextField *label = [NSTextField labelWithString:string];
     label.font = [NSFont systemFontOfSize:13 weight:NSFontWeightSemibold];
-    label.textColor = NSColor.labelColor;
+    label.textColor = [AniaTheme pinkDeep];
     label.translatesAutoresizingMaskIntoConstraints = NO;
     return label;
 }
@@ -216,6 +219,7 @@
 - (NSButton *)checkboxWithTitle:(NSString *)title action:(SEL)action {
     NSButton *checkbox = [NSButton checkboxWithTitle:title target:self action:action];
     checkbox.font = [NSFont systemFontOfSize:13];
+    checkbox.contentTintColor = [AniaTheme pink];
     checkbox.translatesAutoresizingMaskIntoConstraints = NO;
     return checkbox;
 }

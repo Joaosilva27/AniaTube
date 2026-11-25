@@ -25,7 +25,7 @@ INK = (29, 29, 31)
 INK_SOFT = (75, 75, 80)
 MUTED = (138, 138, 145)
 HAIRLINE = (226, 226, 231)
-ACCENT = (241, 25, 52)
+ACCENT = (255, 111, 165)
 VERSION = "1.0.0"
 
 FONT_DIRS = [
@@ -185,7 +185,7 @@ def dmg_backdrop(width, height, scale=1.0):
         max(6, round(28 * scale)),
     )
     face = font(max(11, round(13 * scale)), "Medium")
-    label = "Drag YouTube Music into Applications"
+    label = "Drag AniaTube into Applications"
     draw.text(
         (width / 2, height - 34 * scale),
         label,
@@ -251,7 +251,7 @@ def make_install_download():
 
     draw.text(
         (box[0] + 132, box[1] + 56),
-        "YouTube-Music-%s.dmg" % VERSION,
+        "AniaTube-%s.dmg" % VERSION,
         font=font(29, "SemiBold"),
         fill=INK,
     )
@@ -302,7 +302,7 @@ def make_install_drag():
         draw.ellipse([cx - r, cy - r, cx + r, cy + r], fill=colour)
     draw.text(
         ((box[0] + box[2]) / 2, box[1] + round(14 * scale)),
-        "YouTube Music",
+        "AniaTube",
         font=font(round(13 * scale), "SemiBold"),
         fill=(90, 90, 96),
         anchor="mm",
@@ -312,7 +312,7 @@ def make_install_drag():
     icon_size = round(160 * scale)
     label_face = font(round(12 * scale), "Medium")
     positions = [
-        (round(190 * scale), "YouTube Music"),
+        (round(190 * scale), "AniaTube"),
         (round(610 * scale), "Applications"),
     ]
     for index, (center_x, name) in enumerate(positions):
@@ -347,14 +347,14 @@ def make_install_open():
     canvas.alpha_composite(app_icon(60), (alert[0] + 26, alert[1] + 26))
     draw.text(
         (alert[0] + 100, alert[1] + 28),
-        "\u201cYouTube Music\u201d Not Opened",
+        "\u201cAniaTube\u201d Not Opened",
         font=font(20, "SemiBold"),
         fill=INK,
     )
     paragraph(
         draw,
         (alert[0] + 100, alert[1] + 66),
-        "Apple could not verify \u201cYouTube Music\u201d is free of malware that may harm your Mac or compromise your privacy.",
+        "Apple could not verify \u201cAniaTube\u201d is free of malware that may harm your Mac or compromise your privacy.",
         body,
         INK_SOFT,
         alert[2] - alert[0] - 130,
@@ -390,7 +390,7 @@ def make_install_open():
     paragraph(
         draw,
         (panel[0] + 26, panel[1] + 96),
-        "\u201cYouTube Music\u201d was blocked from use because it is not from an identified developer.",
+        "\u201cAniaTube\u201d was blocked from use because it is not from an identified developer.",
         small,
         INK_SOFT,
         panel[2] - panel[0] - 52,

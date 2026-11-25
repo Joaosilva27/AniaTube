@@ -1,5 +1,6 @@
 #import "StatusItemController.h"
 
+#import "AniaTheme.h"
 #import "LoginItemManager.h"
 #import "PlaybackState.h"
 
@@ -44,7 +45,7 @@
         NSStatusItem *item = [NSStatusBar.systemStatusBar statusItemWithLength:NSVariableStatusItemLength];
         item.behavior = NSStatusItemBehaviorRemovalAllowed;
         item.menu = self.menu;
-        item.button.toolTip = @"YouTube Music";
+        item.button.toolTip = @"AniaTube";
         item.button.image = [self statusImageForPlaying:NO];
         self.statusItem = item;
     } else {
@@ -54,10 +55,10 @@
 }
 
 - (NSImage *)statusImageForPlaying:(BOOL)playing {
-    NSString *name = playing ? @"waveform" : @"music.note";
-    NSImage *image = [NSImage imageWithSystemSymbolName:name accessibilityDescription:@"YouTube Music"];
+    NSString *name = playing ? @"waveform" : @"heart.fill";
+    NSImage *image = [NSImage imageWithSystemSymbolName:name accessibilityDescription:@"AniaTube"];
     if (!image) {
-        image = [NSImage imageWithSystemSymbolName:@"music.note" accessibilityDescription:@"YouTube Music"];
+        image = [NSImage imageWithSystemSymbolName:@"heart.fill" accessibilityDescription:@"AniaTube"];
     }
     image.template = YES;
     NSImageSymbolConfiguration *configuration =
@@ -68,14 +69,14 @@
 #pragma mark - Menu
 
 - (void)buildMenu {
-    NSMenu *menu = [[NSMenu alloc] initWithTitle:@"YouTube Music"];
+    NSMenu *menu = [[NSMenu alloc] initWithTitle:@"AniaTube"];
     menu.autoenablesItems = NO;
 
     self.titleItem = [[NSMenuItem alloc] initWithTitle:@"Not Playing" action:nil keyEquivalent:@""];
     self.titleItem.enabled = NO;
     [menu addItem:self.titleItem];
 
-    self.artistItem = [[NSMenuItem alloc] initWithTitle:@"YouTube Music" action:nil keyEquivalent:@""];
+    self.artistItem = [[NSMenuItem alloc] initWithTitle:@"AniaTube" action:nil keyEquivalent:@""];
     self.artistItem.enabled = NO;
     [menu addItem:self.artistItem];
 
@@ -90,12 +91,12 @@
     self.nextItem = [self itemWithTitle:@"Next" symbol:@"forward.fill" action:@selector(next:)];
     [menu addItem:self.nextItem];
 
-    self.likeItem = [self itemWithTitle:@"Like" symbol:@"hand.thumbsup" action:@selector(toggleLike:)];
+    self.likeItem = [self itemWithTitle:@"Like" symbol:@"heart" action:@selector(toggleLike:)];
     [menu addItem:self.likeItem];
 
     [menu addItem:[NSMenuItem separatorItem]];
 
-    NSMenuItem *show = [self itemWithTitle:@"Show YouTube Music" symbol:@"macwindow" action:@selector(showWindow:)];
+    NSMenuItem *show = [self itemWithTitle:@"Show AniaTube" symbol:@"macwindow" action:@selector(showWindow:)];
     [menu addItem:show];
 
     NSMenuItem *mini = [self itemWithTitle:@"Mini Player" symbol:@"rectangle.compress.vertical" action:@selector(showMiniPlayer:)];
@@ -111,7 +112,7 @@
 
     [menu addItem:[NSMenuItem separatorItem]];
 
-    NSMenuItem *quit = [self itemWithTitle:@"Quit YouTube Music" symbol:nil action:@selector(quit:)];
+    NSMenuItem *quit = [self itemWithTitle:@"Quit AniaTube" symbol:nil action:@selector(quit:)];
     quit.keyEquivalent = @"q";
     quit.keyEquivalentModifierMask = NSEventModifierFlagCommand;
     [menu addItem:quit];
@@ -147,7 +148,7 @@
             : state.title;
         self.statusItem.button.toolTip = tooltip;
     } else {
-        self.statusItem.button.toolTip = @"YouTube Music";
+        self.statusItem.button.toolTip = @"AniaTube";
     }
 }
 
@@ -160,7 +161,7 @@
                                                           font:[NSFont systemFontOfSize:13 weight:NSFontWeightSemibold]
                                                          color:NSColor.labelColor];
         NSString *subtitle = state.subtitle;
-        self.artistItem.attributedTitle = [self attributedTitle:subtitle.length > 0 ? subtitle : @"YouTube Music"
+        self.artistItem.attributedTitle = [self attributedTitle:subtitle.length > 0 ? subtitle : @"AniaTube"
                                                           font:[NSFont systemFontOfSize:11 weight:NSFontWeightRegular]
                                                          color:NSColor.secondaryLabelColor];
         self.artistItem.hidden = subtitle.length == 0;
@@ -168,7 +169,7 @@
         self.titleItem.attributedTitle = [self attributedTitle:@"Not Playing"
                                                           font:[NSFont systemFontOfSize:13 weight:NSFontWeightSemibold]
                                                          color:NSColor.labelColor];
-        self.artistItem.attributedTitle = [self attributedTitle:@"YouTube Music"
+        self.artistItem.attributedTitle = [self attributedTitle:@"AniaTube"
                                                           font:[NSFont systemFontOfSize:11 weight:NSFontWeightRegular]
                                                          color:NSColor.secondaryLabelColor];
         self.artistItem.hidden = NO;
@@ -182,7 +183,7 @@
     self.nextItem.enabled = hasTrack && state.canNext;
 
     self.likeItem.title = state.isLiked ? @"Unlike" : @"Like";
-    self.likeItem.image = [self menuImageNamed:state.isLiked ? @"hand.thumbsup.fill" : @"hand.thumbsup"];
+    self.likeItem.image = [self menuImageNamed:state.isLiked ? @"heart.fill" : @"heart"];
     self.likeItem.enabled = hasTrack && state.canLike;
 
     self.loginItem.state = [LoginItemManager isEnabled] ? NSControlStateValueOn : NSControlStateValueOff;

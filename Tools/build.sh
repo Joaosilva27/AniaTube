@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BUILD_DIR="$ROOT/build"
 DIST_DIR="$ROOT/dist"
-APP="$DIST_DIR/YouTube Music.app"
+APP="$DIST_DIR/AniaTube.app"
 CONTENTS="$APP/Contents"
 MACOS="$CONTENTS/MacOS"
 RESOURCES="$CONTENTS/Resources"
@@ -17,7 +17,7 @@ if [[ "${UNIVERSAL:-0}" == "1" ]]; then
   ARCH_FLAGS="-arch arm64 -arch x86_64"
 fi
 
-echo "Building YouTube Music…"
+echo "Building AniaTube…"
 
 rm -rf "$APP"
 mkdir -p "$MACOS" "$RESOURCES"
@@ -39,9 +39,10 @@ xcrun "$CC" \
   -framework MediaPlayer \
   -framework QuartzCore \
   "$ROOT"/Sources/*.m \
-  -o "$MACOS/YouTube Music"
+  -o "$MACOS/AniaTube"
 
 cp "$ROOT/Resources/Info.plist" "$CONTENTS/Info.plist"
+cp "$ROOT/Resources/AniaTheme.js" "$RESOURCES/AniaTheme.js"
 cp "$ROOT/Resources/PlayerBridge.js" "$RESOURCES/PlayerBridge.js"
 cp "$ROOT/Resources/AudioOnly.js" "$RESOURCES/AudioOnly.js"
 cp "$ROOT/Resources/AdBlocker.js" "$RESOURCES/AdBlocker.js"
@@ -67,9 +68,9 @@ echo "Built $APP"
 if [[ "${1:-}" == "--open" ]]; then
   open "$APP"
 elif [[ "${1:-}" == "--install" ]]; then
-  # Remove the old bundle name so two copies of the same app cannot coexist.
-  rm -rf "/Applications/YTM.app" "/Applications/YouTube Music.app"
-  cp -R "$APP" "/Applications/YouTube Music.app"
-  echo "Installed /Applications/YouTube Music.app"
-  open "/Applications/YouTube Music.app"
+  # Only touch our own bundle; never disturb the original YouTube Music app.
+  rm -rf "/Applications/AniaTube.app"
+  cp -R "$APP" "/Applications/AniaTube.app"
+  echo "Installed /Applications/AniaTube.app"
+  open "/Applications/AniaTube.app"
 fi

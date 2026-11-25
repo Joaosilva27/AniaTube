@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
-# Package dist/YouTube Music.app into a drag-to-install disk image.
+# Package dist/AniaTube.app into a drag-to-install disk image.
 #
-#   ./Tools/make-dmg.sh                      # dist/YouTube-Music-<version>.dmg
+#   ./Tools/make-dmg.sh                      # dist/AniaTube-<version>.dmg
 #   ./Tools/make-dmg.sh path/to/output.dmg   # explicit destination
 #
 # The image opens as a small Finder window with the app on the left, an arrow,
@@ -16,8 +16,8 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-APP="$ROOT/dist/YouTube Music.app"
-VOL_NAME="YouTube Music"
+APP="$ROOT/dist/AniaTube.app"
+VOL_NAME="AniaTube"
 STAGE="$ROOT/build/dmg"
 BACKGROUND="$ROOT/Resources/dmg-background.png"
 
@@ -27,16 +27,16 @@ if [[ ! -d "$APP" ]]; then
 fi
 
 VERSION="$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APP/Contents/Info.plist")"
-OUT="${1:-$ROOT/dist/YouTube-Music-$VERSION.dmg}"
-TMP_IMAGE="$ROOT/build/YouTubeMusic-rw.dmg"
+OUT="${1:-$ROOT/dist/AniaTube-$VERSION.dmg}"
+TMP_IMAGE="$ROOT/build/AniaTube-rw.dmg"
 
-echo "Packaging YouTube Music ${VERSION}..."
+echo "Packaging AniaTube ${VERSION}..."
 
 rm -rf "$STAGE" "$TMP_IMAGE" "$OUT"
 mkdir -p "$ROOT/build" "$STAGE" "$(dirname "$OUT")"
 
 # Contents of the disk image: the app, and a link to /Applications to drop it in.
-cp -R "$APP" "$STAGE/YouTube Music.app"
+cp -R "$APP" "$STAGE/AniaTube.app"
 ln -s /Applications "$STAGE/Applications"
 
 if [[ -f "$BACKGROUND" ]]; then
@@ -64,7 +64,7 @@ tell application "Finder"
     set arrangement of viewOptions to not arranged
     set icon size of viewOptions to 160
     set background picture of viewOptions to file ".background:background.png"
-    set position of item "YouTube Music.app" of container window to {190, 170}
+    set position of item "AniaTube.app" of container window to {190, 170}
     set position of item "Applications" of container window to {610, 170}
     update without registering applications
     delay 2

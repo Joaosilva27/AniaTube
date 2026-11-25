@@ -1,6 +1,7 @@
 #import "WebController.h"
 
 #import "AdBlocker.h"
+#import "AniaTheme.h"
 #import "Preferences.h"
 
 static NSString * const YTMScriptHandlerName = @"ytm";
@@ -14,6 +15,7 @@ static NSString * const YTMSafariUserAgent =
 @property (nonatomic, strong) WKUserContentController *contentController;
 @property (nonatomic, strong, nullable) WKUserScript *playerBridgeScript;
 @property (nonatomic, strong, nullable) WKUserScript *audioOnlyScript;
+@property (nonatomic, strong, nullable) WKUserScript *aniaThemeScript;
 @property (nonatomic, strong) AdBlocker *adBlocker;
 @property (nonatomic, strong, nullable) PlaybackState *state;
 @property (nonatomic, assign) BOOL loading;
@@ -86,6 +88,15 @@ static NSString * const YTMSafariUserAgent =
         NSLog(@"[YTM] AudioOnly.js is missing from the app bundle; audio-only playback will be unavailable.");
     }
 
+    NSString *themeScript = [self resourceNamed:@"AniaTheme" extension:@"js"];
+    if (themeScript.length > 0) {
+        self.aniaThemeScript = [[WKUserScript alloc] initWithSource:themeScript
+                                                     injectionTime:WKUserScriptInjectionTimeAtDocumentStart
+                                                  forMainFrameOnly:YES];
+    } else {
+        NSLog(@"[AniaTube] AniaTheme.js is missing from the app bundle; the pink web theme is unavailable.");
+    }
+
     self.adBlocker = [[AdBlocker alloc] initWithUserContentController:contentController
                                                                enabled:[Preferences sharedPreferences].blockAds];
     [self updateUserScripts];
@@ -98,7 +109,7 @@ static NSString * const YTMSafariUserAgent =
     _webView.allowsLinkPreview = YES;
     _webView.allowsMagnification = NO;
     _webView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
-    _webView.underPageBackgroundColor = [NSColor colorWithSRGBRed:3.0 / 255.0 green:3.0 / 255.0 blue:3.0 / 255.0 alpha:1.0];
+    _webView.underPageBackgroundColor = [AniaTheme cream];
     if (@available(macOS 13.3, *)) {
         _webView.inspectable = YES;
     }
@@ -189,6 +200,9 @@ static NSString * const YTMSafariUserAgent =
 
 - (void)updateUserScripts {
     [self.contentController removeAllUserScripts];
+    if (self.aniaThemeScript) {
+        [self.contentController addUserScript:self.aniaThemeScript];
+    }
     if (self.playerBridgeScript) {
         [self.contentController addUserScript:self.playerBridgeScript];
     }
@@ -544,7 +558,7 @@ static NSString * const YTMSafariUserAgent =
                       initiatedByFrame:(WKFrameInfo *)frame
                      completionHandler:(void (^)(void))completionHandler {
     NSAlert *alert = [[NSAlert alloc] init];
-    alert.messageText = @"YouTube Music";
+    alert.messageText = @"AniaTube";
     alert.informativeText = message;
     [alert addButtonWithTitle:@"OK"];
     [alert beginSheetModalForWindow:webView.window completionHandler:^(NSModalResponse returnCode) {
@@ -557,7 +571,7 @@ static NSString * const YTMSafariUserAgent =
                         initiatedByFrame:(WKFrameInfo *)frame
                        completionHandler:(void (^)(BOOL result))completionHandler {
     NSAlert *alert = [[NSAlert alloc] init];
-    alert.messageText = @"YouTube Music";
+    alert.messageText = @"AniaTube";
     alert.informativeText = message;
     [alert addButtonWithTitle:@"OK"];
     [alert addButtonWithTitle:@"Cancel"];
@@ -572,7 +586,7 @@ static NSString * const YTMSafariUserAgent =
                          initiatedByFrame:(WKFrameInfo *)frame
                         completionHandler:(void (^)(NSString * _Nullable result))completionHandler {
     NSAlert *alert = [[NSAlert alloc] init];
-    alert.messageText = @"YouTube Music";
+    alert.messageText = @"AniaTube";
     alert.informativeText = prompt;
     [alert addButtonWithTitle:@"OK"];
     [alert addButtonWithTitle:@"Cancel"];

@@ -153,7 +153,7 @@
         detail = @"You appear to be offline. Check your internet connection and try again.";
     }
     __weak typeof(self) weakSelf = self;
-    [self.mainWindowController showLoadErrorWithMessage:@"Couldn’t load YouTube Music"
+    [self.mainWindowController showLoadErrorWithMessage:@"Couldn’t load AniaTube"
                                                  detail:detail
                                            retryHandler:^{
         __strong typeof(weakSelf) self = weakSelf;
@@ -166,7 +166,7 @@
 
 - (void)webControllerDidCrash:(WebController *)controller {
     self.showingError = NO;
-    [self.mainWindowController showLoadingWithMessage:@"Reloading YouTube Music…"];
+    [self.mainWindowController showLoadingWithMessage:@"Reloading AniaTube…"];
 }
 
 - (void)webController:(WebController *)controller didUpdateState:(PlaybackState *)state {
@@ -183,7 +183,7 @@
     if (state.hasTrack) {
         self.mainWindowController.window.title = state.displayTitle;
     } else {
-        self.mainWindowController.window.title = @"YouTube Music";
+        self.mainWindowController.window.title = @"AniaTube";
     }
 }
 
@@ -278,8 +278,8 @@
     paragraph.alignment = NSTextAlignmentCenter;
     paragraph.lineSpacing = 2;
 
-    NSString *text = @"An unofficial desktop client for YouTube Music.\n"
-                     @"Not affiliated with Google LLC. YouTube Music is a trademark of Google LLC.\n\n"
+    NSString *text = @"A pink little desktop player for YouTube Music, made with love for Ania.\n"
+                     @"Unofficial client, not affiliated with Google LLC. YouTube Music is a trademark of Google LLC.\n\n"
                      @"Built with AppKit and WebKit.";
     NSMutableAttributedString *credits = [[NSMutableAttributedString alloc] initWithString:text attributes:@{
         NSFontAttributeName: [NSFont systemFontOfSize:11],
@@ -288,7 +288,7 @@
     }];
 
     [NSApp orderFrontStandardAboutPanelWithOptions:@{
-        NSAboutPanelOptionApplicationName: @"YouTube Music",
+        NSAboutPanelOptionApplicationName: @"AniaTube",
         NSAboutPanelOptionApplicationVersion: version,
         NSAboutPanelOptionVersion: build,
         NSAboutPanelOptionCredits: credits
@@ -344,7 +344,7 @@
 
 - (NSMenu *)applicationDockMenu:(NSApplication *)sender {
     PlaybackState *state = self.webController.state;
-    NSMenu *menu = [[NSMenu alloc] initWithTitle:@"YouTube Music"];
+    NSMenu *menu = [[NSMenu alloc] initWithTitle:@"AniaTube"];
 
     NSMenuItem *play = [[NSMenuItem alloc] initWithTitle:state.isPlaying ? @"Pause" : @"Play"
                                                   action:@selector(togglePlayPause:)
@@ -365,7 +365,7 @@
 
     [menu addItem:[NSMenuItem separatorItem]];
 
-    NSMenuItem *show = [[NSMenuItem alloc] initWithTitle:@"Show YouTube Music" action:@selector(showMainWindow:) keyEquivalent:@""];
+    NSMenuItem *show = [[NSMenuItem alloc] initWithTitle:@"Show AniaTube" action:@selector(showMainWindow:) keyEquivalent:@""];
     show.target = self;
     [menu addItem:show];
 
@@ -384,10 +384,10 @@
     // Application
     NSMenuItem *appMenuItem = [[NSMenuItem alloc] init];
     [mainMenu addItem:appMenuItem];
-    NSMenu *appMenu = [[NSMenu alloc] initWithTitle:@"YouTube Music"];
+    NSMenu *appMenu = [[NSMenu alloc] initWithTitle:@"AniaTube"];
     appMenuItem.submenu = appMenu;
 
-    NSMenuItem *about = [appMenu addItemWithTitle:@"About YouTube Music" action:@selector(showAbout:) keyEquivalent:@""];
+    NSMenuItem *about = [appMenu addItemWithTitle:@"About AniaTube" action:@selector(showAbout:) keyEquivalent:@""];
     about.target = self;
     [appMenu addItem:[NSMenuItem separatorItem]];
 
@@ -402,13 +402,13 @@
     NSApp.servicesMenu = servicesMenu;
     [appMenu addItem:[NSMenuItem separatorItem]];
 
-    [appMenu addItemWithTitle:@"Hide YouTube Music" action:@selector(hide:) keyEquivalent:@"h"];
+    [appMenu addItemWithTitle:@"Hide AniaTube" action:@selector(hide:) keyEquivalent:@"h"];
     NSMenuItem *hideOthers = [appMenu addItemWithTitle:@"Hide Others" action:@selector(hideOtherApplications:) keyEquivalent:@"h"];
     hideOthers.keyEquivalentModifierMask = NSEventModifierFlagCommand | NSEventModifierFlagOption;
     [appMenu addItemWithTitle:@"Show All" action:@selector(unhideAllApplications:) keyEquivalent:@""];
     [appMenu addItem:[NSMenuItem separatorItem]];
 
-    NSMenuItem *quit = [appMenu addItemWithTitle:@"Quit YouTube Music" action:@selector(terminate:) keyEquivalent:@"q"];
+    NSMenuItem *quit = [appMenu addItemWithTitle:@"Quit AniaTube" action:@selector(terminate:) keyEquivalent:@"q"];
     quit.keyEquivalentModifierMask = NSEventModifierFlagCommand;
 
     // File

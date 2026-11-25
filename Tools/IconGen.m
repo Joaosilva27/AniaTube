@@ -2,6 +2,26 @@
 
 static const NSInteger kSize = 1024;
 
+static void DrawSparkle(NSPoint center, CGFloat radius, NSColor *color) {
+    NSBezierPath *star = [NSBezierPath bezierPath];
+    [star moveToPoint:NSMakePoint(center.x, center.y + radius)];
+    [star curveToPoint:NSMakePoint(center.x + radius, center.y)
+         controlPoint1:NSMakePoint(center.x + radius * 0.16, center.y + radius * 0.16)
+         controlPoint2:NSMakePoint(center.x + radius * 0.16, center.y - radius * 0.16)];
+    [star curveToPoint:NSMakePoint(center.x, center.y - radius)
+         controlPoint1:NSMakePoint(center.x + radius * 0.16, center.y - radius * 0.16)
+         controlPoint2:NSMakePoint(center.x - radius * 0.16, center.y - radius * 0.16)];
+    [star curveToPoint:NSMakePoint(center.x - radius, center.y)
+         controlPoint1:NSMakePoint(center.x - radius * 0.16, center.y - radius * 0.16)
+         controlPoint2:NSMakePoint(center.x - radius * 0.16, center.y + radius * 0.16)];
+    [star curveToPoint:NSMakePoint(center.x, center.y + radius)
+         controlPoint1:NSMakePoint(center.x - radius * 0.16, center.y + radius * 0.16)
+         controlPoint2:NSMakePoint(center.x + radius * 0.16, center.y + radius * 0.16)];
+    [star closePath];
+    [color setFill];
+    [star fill];
+}
+
 static void DrawIcon(void) {
     NSRect canvas = NSMakeRect(0, 0, kSize, kSize);
     CGFloat inset = 92;
@@ -20,13 +40,13 @@ static void DrawIcon(void) {
     [squircle fill];
     [NSGraphicsContext restoreGraphicsState];
 
-    // Red gradient body.
+    // Pink gradient body.
     [NSGraphicsContext saveGraphicsState];
     [squircle addClip];
     NSGradient *gradient = [[NSGradient alloc] initWithColorsAndLocations:
-        [NSColor colorWithSRGBRed:1.00 green:0.30 blue:0.28 alpha:1.0], 0.0,
-        [NSColor colorWithSRGBRed:0.94 green:0.09 blue:0.20 alpha:1.0], 0.52,
-        [NSColor colorWithSRGBRed:0.72 green:0.00 blue:0.14 alpha:1.0], 1.0,
+        [NSColor colorWithSRGBRed:1.00 green:0.68 blue:0.80 alpha:1.0], 0.0,
+        [NSColor colorWithSRGBRed:0.95 green:0.42 blue:0.64 alpha:1.0], 0.52,
+        [NSColor colorWithSRGBRed:0.79 green:0.23 blue:0.49 alpha:1.0], 1.0,
         nil];
     [gradient drawInRect:body angle:-90];
 
@@ -45,12 +65,39 @@ static void DrawIcon(void) {
     [rim stroke];
     [NSGraphicsContext restoreGraphicsState];
 
-    // White play glyph, optically centered.
-    CGFloat cx = NSMidX(body) + 14;
-    CGFloat cy = NSMidY(body);
-    CGFloat halfHeight = 152;
-    CGFloat halfWidth = 120;
+    // A white heart with a deep-pink play glyph inside.
+    CGFloat heartWidth = 480;
+    CGFloat heartHeight = 444;
+    CGFloat heartX = NSMidX(body) - heartWidth / 2;
+    CGFloat heartY = NSMidY(body) - heartHeight / 2 + 8;
+    NSBezierPath *heart = [NSBezierPath bezierPath];
+    [heart moveToPoint:NSMakePoint(heartX + heartWidth * 0.50, heartY)];
+    [heart curveToPoint:NSMakePoint(heartX, heartY + heartHeight * 0.62)
+          controlPoint1:NSMakePoint(heartX + heartWidth * 0.18, heartY + heartHeight * 0.20)
+          controlPoint2:NSMakePoint(heartX, heartY + heartHeight * 0.38)];
+    [heart curveToPoint:NSMakePoint(heartX + heartWidth * 0.36, heartY + heartHeight)
+          controlPoint1:NSMakePoint(heartX, heartY + heartHeight * 0.86)
+          controlPoint2:NSMakePoint(heartX + heartWidth * 0.16, heartY + heartHeight)];
+    [heart curveToPoint:NSMakePoint(heartX + heartWidth * 0.50, heartY + heartHeight * 0.86)
+          controlPoint1:NSMakePoint(heartX + heartWidth * 0.46, heartY + heartHeight)
+          controlPoint2:NSMakePoint(heartX + heartWidth * 0.50, heartY + heartHeight * 0.94)];
+    [heart curveToPoint:NSMakePoint(heartX + heartWidth * 0.64, heartY + heartHeight)
+          controlPoint1:NSMakePoint(heartX + heartWidth * 0.50, heartY + heartHeight * 0.94)
+          controlPoint2:NSMakePoint(heartX + heartWidth * 0.54, heartY + heartHeight)];
+    [heart curveToPoint:NSMakePoint(heartX + heartWidth, heartY + heartHeight * 0.62)
+          controlPoint1:NSMakePoint(heartX + heartWidth * 0.84, heartY + heartHeight)
+          controlPoint2:NSMakePoint(heartX + heartWidth, heartY + heartHeight * 0.86)];
+    [heart curveToPoint:NSMakePoint(heartX + heartWidth * 0.50, heartY)
+          controlPoint1:NSMakePoint(heartX + heartWidth, heartY + heartHeight * 0.38)
+          controlPoint2:NSMakePoint(heartX + heartWidth * 0.82, heartY + heartHeight * 0.20)];
+    [heart closePath];
+    [[NSColor whiteColor] setFill];
+    [heart fill];
 
+    CGFloat cx = NSMidX(body) + 14;
+    CGFloat cy = NSMidY(body) + 26;
+    CGFloat halfHeight = 96;
+    CGFloat halfWidth = 76;
     NSBezierPath *play = [NSBezierPath bezierPath];
     play.lineJoinStyle = NSLineJoinStyleRound;
     play.lineCapStyle = NSLineCapStyleRound;
@@ -58,8 +105,13 @@ static void DrawIcon(void) {
     [play lineToPoint:NSMakePoint(cx - halfWidth, cy + halfHeight)];
     [play lineToPoint:NSMakePoint(cx + halfWidth, cy)];
     [play closePath];
-    [[NSColor whiteColor] setFill];
+    [[NSColor colorWithSRGBRed:0.78 green:0.24 blue:0.49 alpha:1.0] setFill];
     [play fill];
+
+    // Two little sparkles for the girly finishing touch.
+    NSColor *sparkle = [NSColor colorWithWhite:1.0 alpha:0.9];
+    DrawSparkle(NSMakePoint(735, 742), 34, sparkle);
+    DrawSparkle(NSMakePoint(312, 292), 22, sparkle);
 }
 
 int main(int argc, const char *argv[]) {

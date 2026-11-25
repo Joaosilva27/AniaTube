@@ -1,5 +1,6 @@
 #import "MainWindowController.h"
 
+#import "AniaTheme.h"
 #import "LoadingOverlayView.h"
 #import "WebController.h"
 
@@ -18,6 +19,12 @@ static const CGFloat YTMChromeInset = 28.0;
     return YES;
 }
 
+- (void)drawRect:(NSRect)dirtyRect {
+    [[AniaTheme titlebarGradient] drawInRect:self.bounds angle:0];
+    [[[AniaTheme pinkDeep] colorWithAlphaComponent:0.16] setFill];
+    NSRectFill(NSMakeRect(0, 0, NSWidth(self.bounds), 1));
+}
+
 @end
 
 @interface MainWindowController () <NSWindowDelegate>
@@ -25,8 +32,8 @@ static const CGFloat YTMChromeInset = 28.0;
 @property (nonatomic, strong, readwrite) WebController *webController;
 @property (nonatomic, strong) LoadingOverlayView *overlayView;
 @property (nonatomic, strong) YTMTitlebarStripView *titlebarStrip;
-@property (nonatomic, strong) NSButton *miniPlayerButton;
-@property (nonatomic, strong) NSButton *videoButton;
+@property (nonatomic, strong) AniaPillButton *miniPlayerButton;
+@property (nonatomic, strong) AniaPillButton *videoButton;
 @property (nonatomic, assign) BOOL videoButtonHasVideo;
 @property (nonatomic, assign) BOOL videoButtonShowsVideo;
 @property (nonatomic, strong) NSLayoutConstraint *webTopConstraint;
@@ -56,9 +63,10 @@ static const CGFloat YTMChromeInset = 28.0;
 
     _webController = webController;
 
-    window.title = @"YouTube Music";
+    window.title = @"AniaTube";
     window.minSize = NSMakeSize(980, 620);
-    window.backgroundColor = [NSColor colorWithSRGBRed:0.012 green:0.012 blue:0.012 alpha:1.0];
+    window.backgroundColor = [AniaTheme cream];
+    window.appearance = [NSAppearance appearanceNamed:NSAppearanceNameAqua];
     window.titlebarAppearsTransparent = YES;
     window.titleVisibility = NSWindowTitleHidden;
     window.movableByWindowBackground = NO;
@@ -70,7 +78,7 @@ static const CGFloat YTMChromeInset = 28.0;
 
     NSView *container = [[NSView alloc] initWithFrame:window.contentLayoutRect];
     container.wantsLayer = YES;
-    container.layer.backgroundColor = window.backgroundColor.CGColor;
+    container.layer.backgroundColor = [AniaTheme cream].CGColor;
     window.contentView = container;
 
     WKWebView *webView = webController.webView;
@@ -102,8 +110,6 @@ static const CGFloat YTMChromeInset = 28.0;
 
     _titlebarStrip = [[YTMTitlebarStripView alloc] initWithFrame:NSZeroRect];
     _titlebarStrip.translatesAutoresizingMaskIntoConstraints = NO;
-    _titlebarStrip.wantsLayer = YES;
-    _titlebarStrip.layer.backgroundColor = window.backgroundColor.CGColor;
     [container addSubview:_titlebarStrip];
     [NSLayoutConstraint activateConstraints:@[
         [_titlebarStrip.leadingAnchor constraintEqualToAnchor:container.leadingAnchor],
@@ -112,13 +118,10 @@ static const CGFloat YTMChromeInset = 28.0;
         [_titlebarStrip.heightAnchor constraintEqualToConstant:YTMChromeInset]
     ]];
 
-    _miniPlayerButton = [NSButton buttonWithTitle:@"Mini Player"
-                                          target:self
-                                          action:@selector(miniPlayerPressed:)];
+    _miniPlayerButton = [[AniaPillButton alloc] initWithPillTitle:@"Mini Player"
+                                                           target:self
+                                                           action:@selector(miniPlayerPressed:)];
     _miniPlayerButton.translatesAutoresizingMaskIntoConstraints = NO;
-    _miniPlayerButton.bezelStyle = NSBezelStyleRounded;
-    _miniPlayerButton.controlSize = NSControlSizeSmall;
-    _miniPlayerButton.font = [NSFont systemFontOfSize:11 weight:NSFontWeightMedium];
     _miniPlayerButton.toolTip = @"Show or hide the floating mini player";
     [self updateMiniPlayerButtonImage];
     [_titlebarStrip addSubview:_miniPlayerButton];
@@ -127,13 +130,10 @@ static const CGFloat YTMChromeInset = 28.0;
         [_miniPlayerButton.trailingAnchor constraintEqualToAnchor:_titlebarStrip.trailingAnchor constant:-12]
     ]];
 
-    _videoButton = [NSButton buttonWithTitle:@"Video"
-                                     target:self
-                                     action:@selector(videoPressed:)];
+    _videoButton = [[AniaPillButton alloc] initWithPillTitle:@"Video"
+                                                      target:self
+                                                      action:@selector(videoPressed:)];
     _videoButton.translatesAutoresizingMaskIntoConstraints = NO;
-    _videoButton.bezelStyle = NSBezelStyleRounded;
-    _videoButton.controlSize = NSControlSizeSmall;
-    _videoButton.font = [NSFont systemFontOfSize:11 weight:NSFontWeightMedium];
     _videoButton.toolTip = @"Show the music video";
     _videoButton.hidden = YES;
     [self updateVideoButtonImageForVisible:NO];
@@ -141,6 +141,34 @@ static const CGFloat YTMChromeInset = 28.0;
     [NSLayoutConstraint activateConstraints:@[
         [_videoButton.centerYAnchor constraintEqualToAnchor:_titlebarStrip.centerYAnchor],
         [_videoButton.trailingAnchor constraintEqualToAnchor:_miniPlayerButton.leadingAnchor constant:-8]
+    ]];
+
+    // A tiny brand mark in the middle of the pink strip. The traffic lights live
+    // on the left and the player controls on the right, so this stays clear.
+    NSTextField *brandLabel = [NSTextField labelWithString:@"AniaTube"];
+    brandLabel.font = [NSFont systemFontOfSize:11.5 weight:NSFontWeightSemibold];
+    brandLabel.textColor = [AniaTheme pinkDeep];
+    brandLabel.translatesAutoresizingMaskIntoConstraints = NO;
+    [_titlebarStrip addSubview:brandLabel];
+
+    NSImage *heart = [NSImage imageWithSystemSymbolName:@"heart.fill" accessibilityDescription:nil];
+    NSImageSymbolConfiguration *heartConfiguration =
+        [NSImageSymbolConfiguration configurationWithPointSize:9 weight:NSFontWeightSemibold];
+    heart = [heart imageWithSymbolConfiguration:heartConfiguration];
+    heart.template = YES;
+    NSImageView *heartView = [[NSImageView alloc] initWithFrame:NSZeroRect];
+    heartView.image = heart;
+    heartView.contentTintColor = [AniaTheme pink];
+    heartView.translatesAutoresizingMaskIntoConstraints = NO;
+    [_titlebarStrip addSubview:heartView];
+
+    [NSLayoutConstraint activateConstraints:@[
+        [heartView.trailingAnchor constraintEqualToAnchor:brandLabel.leadingAnchor constant:-4],
+        [heartView.centerYAnchor constraintEqualToAnchor:brandLabel.centerYAnchor],
+        [heartView.widthAnchor constraintEqualToConstant:11],
+        [heartView.heightAnchor constraintEqualToConstant:11],
+        [brandLabel.centerXAnchor constraintEqualToAnchor:_titlebarStrip.centerXAnchor constant:6],
+        [brandLabel.centerYAnchor constraintEqualToAnchor:_titlebarStrip.centerYAnchor]
     ]];
 
     NSString *autosaveKey = [@"NSWindow Frame " stringByAppendingString:@"YTMMainWindow"];
@@ -220,7 +248,7 @@ static const CGFloat YTMChromeInset = 28.0;
 }
 
 - (void)updateMiniPlayerButtonVisible:(BOOL)visible {
-    self.miniPlayerButton.title = visible ? @"Hide Mini Player" : @"Mini Player";
+    [self.miniPlayerButton setPillTitle:visible ? @"Hide Mini Player" : @"Mini Player"];
     self.miniPlayerButton.toolTip = visible ? @"Hide the floating mini player"
                                             : @"Show the floating mini player";
     [self updateMiniPlayerButtonImage];
@@ -240,7 +268,7 @@ static const CGFloat YTMChromeInset = 28.0;
     }
 
     self.videoButton.hidden = NO;
-    self.videoButton.title = videoVisible ? @"Audio" : @"Video";
+    [self.videoButton setPillTitle:videoVisible ? @"Audio" : @"Video"];
     self.videoButton.toolTip = videoVisible ? @"Hide the music video and return to audio only"
                                             : @"Show the music video";
     [self updateVideoButtonImageForVisible:videoVisible];
@@ -255,6 +283,7 @@ static const CGFloat YTMChromeInset = 28.0;
     image.template = YES;
     self.videoButton.image = image;
     self.videoButton.imagePosition = image ? NSImageLeading : NSNoImage;
+    self.videoButton.contentTintColor = [AniaTheme pinkDeep];
 }
 
 - (void)updateMiniPlayerButtonImage {
@@ -267,6 +296,7 @@ static const CGFloat YTMChromeInset = 28.0;
     image.template = YES;
     self.miniPlayerButton.image = image;
     self.miniPlayerButton.imagePosition = image ? NSImageLeading : NSNoImage;
+    self.miniPlayerButton.contentTintColor = [AniaTheme pinkDeep];
 }
 
 #pragma mark - Full screen

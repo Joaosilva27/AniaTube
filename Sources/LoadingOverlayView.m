@@ -2,6 +2,8 @@
 
 #import <QuartzCore/QuartzCore.h>
 
+#import "AniaTheme.h"
+
 #pragma mark - Logo
 
 @interface YTMPlayLogoView : NSView
@@ -26,11 +28,7 @@
     NSRect bounds = NSInsetRect(self.bounds, 2, 2);
     NSBezierPath *squircle = [NSBezierPath bezierPathWithRoundedRect:bounds xRadius:22 yRadius:22];
 
-    NSGradient *gradient = [[NSGradient alloc] initWithColors:@[
-        [NSColor colorWithSRGBRed:1.0 green:0.19 blue:0.25 alpha:1.0],
-        [NSColor colorWithSRGBRed:0.78 green:0.0 blue:0.16 alpha:1.0]
-    ]];
-    [gradient drawInBezierPath:squircle angle:-90];
+    [[AniaTheme logoGradient] drawInBezierPath:squircle angle:-90];
 
     // Soft top highlight.
     NSBezierPath *highlight = [NSBezierPath bezierPathWithRoundedRect:NSInsetRect(bounds, 1, 1)
@@ -41,17 +39,24 @@
     [highlight stroke];
 
     CGFloat side = bounds.size.width;
-    CGFloat triangleHeight = side * 0.42;
-    CGFloat triangleWidth = side * 0.36;
-    CGFloat cx = NSMidX(bounds) + side * 0.025;
-    CGFloat cy = NSMidY(bounds);
+    CGFloat heartWidth = side * 0.48;
+    CGFloat heartHeight = side * 0.44;
+    NSRect heartRect = NSMakeRect(NSMidX(bounds) - heartWidth / 2,
+                                  NSMidY(bounds) - heartHeight / 2 + 1,
+                                  heartWidth, heartHeight);
+    [AniaTheme drawHeartInRect:heartRect color:[NSColor whiteColor]];
 
+    // A tiny deep-pink play triangle inside the heart keeps the music cue.
+    CGFloat triangleHeight = side * 0.14;
+    CGFloat triangleWidth = side * 0.12;
+    CGFloat cx = NSMidX(bounds) + side * 0.018;
+    CGFloat cy = NSMidY(bounds) + side * 0.035;
     NSBezierPath *play = [NSBezierPath bezierPath];
     [play moveToPoint:NSMakePoint(cx - triangleWidth / 2, cy - triangleHeight / 2)];
     [play lineToPoint:NSMakePoint(cx - triangleWidth / 2, cy + triangleHeight / 2)];
     [play lineToPoint:NSMakePoint(cx + triangleWidth / 2, cy)];
     [play closePath];
-    [[NSColor whiteColor] setFill];
+    [[AniaTheme pinkDeep] setFill];
     [play fill];
 }
 
@@ -78,15 +83,14 @@
     if (!self) { return nil; }
 
     self.wantsLayer = YES;
-    self.layer.backgroundColor = [NSColor colorWithSRGBRed:0.012 green:0.012 blue:0.012 alpha:1.0].CGColor;
-    // The splash stays black in both themes, so render its controls in dark mode.
-    self.appearance = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
+    // The splash uses the same soft pink as the rest of AniaTube.
+    self.appearance = [NSAppearance appearanceNamed:NSAppearanceNameAqua];
 
     _logoView = [[YTMPlayLogoView alloc] initWithFrame:NSMakeRect(0, 0, 76, 76)];
 
-    _titleLabel = [self labelWithString:@"YouTube Music" size:17 weight:NSFontWeightSemibold color:[NSColor whiteColor]];
+    _titleLabel = [self labelWithString:@"AniaTube" size:17 weight:NSFontWeightSemibold color:[AniaTheme plum]];
     _detailLabel = [self labelWithString:@"Loading your library…" size:12 weight:NSFontWeightRegular
-                                   color:[NSColor colorWithWhite:1.0 alpha:0.55]];
+                                   color:[AniaTheme plumSoft]];
     _detailLabel.alignment = NSTextAlignmentCenter;
     _detailLabel.maximumNumberOfLines = 3;
     _detailLabel.lineBreakMode = NSLineBreakByWordWrapping;
@@ -102,6 +106,8 @@
 
     _retryButton = [NSButton buttonWithTitle:@"Try Again" target:self action:@selector(retryPressed:)];
     _retryButton.bezelStyle = NSBezelStyleRounded;
+    _retryButton.bezelColor = [AniaTheme pink];
+    _retryButton.contentTintColor = [NSColor whiteColor];
     _retryButton.keyEquivalent = @"\r";
     _retryButton.hidden = YES;
 
@@ -130,6 +136,33 @@
     return YES;
 }
 
+- (void)drawRect:(NSRect)dirtyRect {
+    [[AniaTheme cream] setFill];
+    NSRectFill(self.bounds);
+
+    NSGradient *wash = [[NSGradient alloc] initWithColorsAndLocations:
+        [[AniaTheme blush] colorWithAlphaComponent:0.0], 0.0,
+        [[AniaTheme blush] colorWithAlphaComponent:0.9], 1.0,
+        nil];
+    [wash drawInRect:self.bounds angle:-90];
+
+    // A few oversized, barely-there hearts make the splash feel hand made.
+    NSRect bounds = self.bounds;
+    NSArray<NSValue *> *spots = @[
+        [NSValue valueWithRect:NSMakeRect(NSWidth(bounds) * 0.13, NSHeight(bounds) * 0.70, 64, 60)],
+        [NSValue valueWithRect:NSMakeRect(NSWidth(bounds) * 0.22, NSHeight(bounds) * 0.18, 34, 32)],
+        [NSValue valueWithRect:NSMakeRect(NSWidth(bounds) * 0.80, NSHeight(bounds) * 0.74, 46, 43)],
+        [NSValue valueWithRect:NSMakeRect(NSWidth(bounds) * 0.86, NSHeight(bounds) * 0.26, 74, 70)],
+        [NSValue valueWithRect:NSMakeRect(NSWidth(bounds) * 0.63, NSHeight(bounds) * 0.10, 26, 24)]
+    ];
+    NSArray<NSNumber *> *alphas = @[@0.10, @0.08, @0.09, @0.07, @0.08];
+    [spots enumerateObjectsUsingBlock:^(NSValue *value, NSUInteger index, BOOL *stop) {
+        NSRect rect = value.rectValue;
+        NSColor *color = [[AniaTheme pink] colorWithAlphaComponent:alphas[index].doubleValue];
+        [AniaTheme drawHeartInRect:rect color:color];
+    }];
+}
+
 - (NSTextField *)labelWithString:(NSString *)string
                             size:(CGFloat)size
                           weight:(NSFontWeight)weight
@@ -153,7 +186,7 @@
     self.spinner.hidden = NO;
     [self.spinner startAnimation:nil];
     self.retryButton.hidden = YES;
-    self.titleLabel.stringValue = @"YouTube Music";
+    self.titleLabel.stringValue = @"AniaTube";
 }
 
 - (void)showErrorWithMessage:(NSString *)message
