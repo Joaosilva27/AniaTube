@@ -349,17 +349,20 @@ ytmusic-logo a::before {
   line-height: 1;
 }
 /* The badge lives inside the anchor so the flex row centres it with the
-   wordmark; as a sibling of the anchor it sat a couple of pixels low. */
+   wordmark; as a sibling of the anchor it sat a couple of pixels low.
+   The mascot PNG has a white background, so multiply drops it into the blush
+   nav bar instead of showing a white square. */
 ytmusic-logo a::after {
   content: "";
   flex: 0 0 auto;
-  width: 26px;
-  height: 18px;
+  width: 30px;
+  height: 30px;
   margin-left: 8px;
-  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 20'%3E%3Crect width='28' height='20' rx='5' fill='%23ff5f97'/%3E%3Cpath d='M11 5.5L18 10L11 14.5Z' fill='%23ffffff'/%3E%3C/svg%3E");
+  background-image: var(--ania-logo, url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 20'%3E%3Crect width='28' height='20' rx='5' fill='%23ff5f97'/%3E%3Cpath d='M11 5.5L18 10L11 14.5Z' fill='%23ffffff'/%3E%3C/svg%3E"));
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
+  mix-blend-mode: multiply;
 }
 
 /* The hover play button on guide entries ships a white circle with an
@@ -529,6 +532,9 @@ ytmusic-nav-bar a.sign-in-link.app-bar-button:hover {
     }
 
     root.style.setProperty('color-scheme', 'light');
+    if (window.__aniaLogoDataURL) {
+      root.style.setProperty('--ania-logo', 'url("' + window.__aniaLogoDataURL + '")');
+    }
     if (root.getAttribute('ania-theme') !== 'pink') {
       root.setAttribute('ania-theme', 'pink');
     }

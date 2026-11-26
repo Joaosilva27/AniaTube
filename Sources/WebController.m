@@ -23,6 +23,8 @@ static NSString * const YTMSafariUserAgent =
 @property (nonatomic, assign) NSInteger consentAutomationAttempts;
 
 - (void)handleScriptMessage:(WKScriptMessage *)message;
+- (nullable NSURL *)resourceURLNamed:(NSString *)name extension:(NSString *)extension;
+- (nullable NSString *)aniaLogoScript;
 
 @end
 
@@ -90,6 +92,10 @@ static NSString * const YTMSafariUserAgent =
     }
 
     NSString *themeScript = [self resourceNamed:@"AniaTheme" extension:@"js"];
+    NSString *logoScript = [self aniaLogoScript];
+    if (logoScript.length > 0) {
+        themeScript = [logoScript stringByAppendingString:themeScript ?: @""];
+    }
     if (themeScript.length > 0) {
         self.aniaThemeScript = [[WKUserScript alloc] initWithSource:themeScript
                                                      injectionTime:WKUserScriptInjectionTimeAtDocumentStart
@@ -131,6 +137,17 @@ static NSString * const YTMSafariUserAgent =
 #pragma mark - Resources
 
 - (nullable NSString *)resourceNamed:(NSString *)name extension:(NSString *)extension {
+    NSURL *url = [self resourceURLNamed:name extension:extension];
+    if (!url) { return nil; }
+    NSError *error = nil;
+    NSString *source = [NSString stringWithContentsOfURL:url encoding:NSUTF8StringEncoding error:&error];
+    if (!source) {
+        NSLog(@"[YTM] Could not read %@.%@: %@", name, extension, error.localizedDescription);
+    }
+    return source;
+}
+
+- (nullable NSURL *)resourceURLNamed:(NSString *)name extension:(NSString *)extension {
     NSURL *url = [NSBundle.mainBundle URLForResource:name withExtension:extension];
     if (!url) {
         // Also support running the raw executable next to the Resources folder while developing.
@@ -141,13 +158,18 @@ static NSString * const YTMSafariUserAgent =
             url = [NSURL fileURLWithPath:fallback];
         }
     }
+    return url;
+}
+
+/// Hands the mascot to the injected stylesheet as a data URL, so the theme can
+/// draw it next to the wordmark without granting the web view file access.
+- (nullable NSString *)aniaLogoScript {
+    NSURL *url = [self resourceURLNamed:@"AniaMascot" extension:@"png"];
     if (!url) { return nil; }
-    NSError *error = nil;
-    NSString *source = [NSString stringWithContentsOfURL:url encoding:NSUTF8StringEncoding error:&error];
-    if (!source) {
-        NSLog(@"[YTM] Could not read %@.%@: %@", name, extension, error.localizedDescription);
-    }
-    return source;
+    NSData *data = [NSData dataWithContentsOfURL:url];
+    if (data.length == 0) { return nil; }
+    return [NSString stringWithFormat:@"window.__aniaLogoDataURL = \"data:image/png;base64,%@\";\n",
+            [data base64EncodedStringWithOptions:0]];
 }
 
 #pragma mark - Loading

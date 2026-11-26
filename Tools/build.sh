@@ -43,6 +43,7 @@ xcrun "$CC" \
 
 cp "$ROOT/Resources/Info.plist" "$CONTENTS/Info.plist"
 cp "$ROOT/Resources/AniaTheme.js" "$RESOURCES/AniaTheme.js"
+cp "$ROOT/Resources/AniaMascot.png" "$RESOURCES/AniaMascot.png"
 cp "$ROOT/Resources/PlayerBridge.js" "$RESOURCES/PlayerBridge.js"
 cp "$ROOT/Resources/AudioOnly.js" "$RESOURCES/AudioOnly.js"
 cp "$ROOT/Resources/AdBlocker.js" "$RESOURCES/AdBlocker.js"
