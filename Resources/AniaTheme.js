@@ -299,14 +299,15 @@ yt-img-shadow {
   overflow: hidden;
 }
 
-ytmusic-two-row-item-renderer .image,
-ytmusic-grid-element-renderer .image {
-  transition: box-shadow 160ms ease, transform 160ms ease !important;
+/* Lift the whole card on hover. Moving only the artwork left a gap under it
+   and clipped its shadow into a visible rectangle around the card. */
+ytmusic-two-row-item-renderer,
+ytmusic-grid-element-renderer {
+  transition: transform 160ms ease !important;
 }
 
-ytmusic-two-row-item-renderer:hover .image,
-ytmusic-grid-element-renderer:hover .image {
-  box-shadow: 0 10px 24px rgba(214, 63, 122, 0.18) !important;
+ytmusic-two-row-item-renderer:hover,
+ytmusic-grid-element-renderer:hover {
   transform: translateY(-2px);
 }
 
